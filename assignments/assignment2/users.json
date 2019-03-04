@@ -1,0 +1,11 @@
+{
+	"users": 
+		{
+			"rakeshsv1" : {
+				"password" : "test123"
+			},
+			"rakeshsv2" : {
+				"password" : "udayton"
+			}
+		}
+}
