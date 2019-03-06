@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"net"
 	"os"
-	//"strings"
+	"strings"
 	"encoding/json"
 )
 
 const BUFFERSIZE int = 1024
 
-var allClient_conns = make(map[string]net.Conn)
+var allClient_conns = make(map[net.Conn]string)
 
 var credsDB map[string]interface{}
 
@@ -33,35 +33,69 @@ func sendToClient(data []byte, client_conn net.Conn) {
 		return
 	}
 }
-/*
-func sendAll(data []byte) {
-	for client_conn := allClient_conns {
-		_, write_err := client_conn.Write(data)
-		if write_err != nil {
-			fmt.Println("Error in receiving...")
-			return
+
+func sendToUsernames(fromClient net.Conn, fromUser string, toUser string, message string) {
+	sendMessage := fromUser + ": " + message
+	for client_conn, user := range allClient_conns {
+		if client_conn != fromClient && user == toUser {
+			if user == fromUser {
+				sendMessage = "You: " + message 
+			}
+			_, write_err := client_conn.Write([]byte(sendMessage))
+			if write_err != nil {
+				fmt.Println("Error in sending message to %s", toUser)
+			}
 		}
+		sendMessage =  fromUser + ": " + message
 	}
 }
-*/
+
+func sendToAllClients(fromClient net.Conn, fromUser string, message string) {
+	sendMessage := fromUser + ": " + message	
+	for client_conn, user := range allClient_conns {
+		if client_conn != fromClient {
+			if user == fromUser {
+				sendMessage = "You: " + message
+			}
+			_, write_err := client_conn.Write([]byte(sendMessage))
+			if write_err != nil {
+				fmt.Println("Error in sending message to clients...")
+			}
+		}
+		sendMessage = fromUser + ": " + message
+	}
+}
+
+func getOnlineUsers() (onlineUsers string) {
+	onlineUsers = "Online Users: \n"
+	for _, user := range allClient_conns {
+		onlineUsers = onlineUsers + user + "\n"
+	}
+	return
+}
+
+func sendOnlineUsers(toClient net.Conn) {
+	onlineUsers := getOnlineUsers()
+	_, write_err := toClient.Write([]byte(onlineUsers))
+	if write_err != nil {
+		fmt.Println("Error in Sending online users...")
+	}
+}
 
 func authenticateUser(creds map[string]interface{}, client_conn net.Conn) {
-	fmt.Println("Authenticating user...")
 	users := credsDB["users"].(map[string]interface{})
-	
 	username := creds["username"].(string)
 	if users[username] != nil && (users[username].(map[string]interface{}))["password"].(string) == creds["password"].(string) {
-		allClient_conns[username] = client_conn
+		allClient_conns[client_conn] = username
 		sendToClient([]byte("User authenticated. You can now message your friends."), client_conn)
 	} else {
 		sendToClient([]byte("User authentication failed, try again"), client_conn)
 	}
 }
 
-//func client_goroutine(client_conn net.Conn, allClient_conns map[net.Conn]string) {
 func handleNewClient(client_conn net.Conn) {
 	var buffer [BUFFERSIZE]byte
-	askCreds := "Enter your credentials.\nUsage: {\"username\":\"<your_username>\", \"password\":\"<your_password>\"} and press Enter\n"
+	askCreds := "Login to chat server.\nUsage: {\"username\":\"<your_username>\", \"password\":\"<your_password>\"} and press Enter\n"
 	sendToClient([]byte(askCreds), client_conn)
 	lostClientChannel := make(chan net.Conn)
 	go func() {
@@ -74,34 +108,57 @@ func handleNewClient(client_conn net.Conn) {
 			}
 			data := buffer[0:byte_received]
 			fmt.Printf("Received data: %s\n", buffer)
-			var creds map[string]interface{}
-			if err := json.Unmarshal(data, &creds); err != nil {
-				fmt.Println("Error in user data parsing.")
-				panic(err)
+			//buffer = nil
+			//buffer = make([BUFFERSIZE]byte)
+			if string(data) == "3" {
+				sendOnlineUsers(client_conn)
 			}
-			username := creds["username"].(string)
-			if (allClient_conns[username] != nil) {
-				fmt.Println("Welcome " + username)
+			if fromUserName, ok := allClient_conns[client_conn]; ok {
+				if string(data) == "1" {
+					onlineUsers := getOnlineUsers()
+					sendToClient([]byte("Online Users: " + onlineUsers + "\nUsage: 'To:<username>:<message> + [ENTER]'"), client_conn)
+				} else if string(data) == "2" {
+					sendToClient([]byte("Usage: 'To:All:<message> + [ENTER]'"), client_conn)
+				} else {
+					messageFormat := strings.Split(string(data), ":")
+					if len(messageFormat) < 2 {
+						sendToClient([]byte("To send message to user, \nUsage: `To:<username>:<your_message>` and ENTER"), client_conn)
+					} else {
+						if strings.ToLower(messageFormat[0]) == "to" {
+							if strings.ToLower(messageFormat[1]) == "all" {
+								sendToAllClients(client_conn, fromUserName, messageFormat[2])
+							} else {
+								sendToUsernames(client_conn, fromUserName, messageFormat[1], messageFormat[2])
+							}
+						} else {
+							sendToClient([]byte("To send message to user, \nUsage: `To:<username>:<your_message>` and ENTER"), client_conn)
+						}
+					}
+				}
+				
 			} else {
-				authenticateUser(creds, client_conn)
+				var creds map[string]interface{}
+				if err := json.Unmarshal(data, &creds); err != nil {
+					sendToClient([]byte("Please login first to use the chat server.\nUsage: {\"username\":\"<your_username>\", \"password\":\"<your_password>\"} and press Enter\n"), client_conn)
+					//panic(err)
+				} else {
+					authenticateUser(creds, client_conn)
+				}				
 			}
 		}
 	}()
-	/*
+	
 	for {
 		select {
 			case client_conn := <-lostClientChannel:
-			fmt.Printf("Test123");
-			clientInfo := allClient_conns[client_conn]
-			delete(allClient_conns, client_conn)	
-			var str []string
-			str = append(str, clientInfo)
-			str = append(str, ": Disconnected.\n")
-			go sendAll([]byte(strings.Join(str, "")))
-			fmt.Printf("Total connected clients: %d\n", len(allClient_conns))
+				username := allClient_conns[client_conn]
+				message := username + " with IP " + client_conn.RemoteAddr().String() + ": has exited chat room.\n"
+				delete(allClient_conns, client_conn)
+				go sendToAllClients(client_conn, "Server", message)				
+				fmt.Printf("Total connected clients: %d\n", len(allClient_conns))
 		}
 	}
-	*/
+	
 }
 
 func main() {
@@ -125,16 +182,12 @@ func main() {
 	go func() {
 		for {
 			client_conn, _ := server.Accept()
-			//go client_goroutine(client_conn, allClient_conns)
-			//go client_goroutine(client_conn)
 			newClientChannel <- client_conn
 		}
 	}()
 	for {
 		select {
 			case client_conn := <-newClientChannel:
-				fmt.Printf("A new client '%s' connected!\n", client_conn.RemoteAddr().String())
-				//allClient_conns[client_conn] = client_conn.RemoteAddr().String()
 				go handleNewClient(client_conn)
 		}
 	}

@@ -42,13 +42,21 @@ client.on("close", function(data) {
 });
 
 keyboard.on("line", (input) => {
-	console.log('You typed: ' + input);
 	if (input === ".exit") {
 		client.destroy();
-		console.log("Disconnected!");
 		process.exit();
-	} else {
-		console.log("Entered: " + input);
+	} if (input === "help") {
+		console.log("Choose your option");
+		console.log("1 Send private message");
+		console.log("2 Send public message");
+		console.log("3 List online friends");
+	} else if (input === "1") {
+		client.write("1");
+	} else if (input === "2") {
+		client.write("2");
+	} else if (input === "3") {
+		client.write("3");
+	} else {//if (input.toLoer.startsWith("to")) {
 		client.write(input);
 	}
 });
