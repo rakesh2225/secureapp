@@ -68,7 +68,11 @@ func sendToAllClients(fromClient net.Conn, fromUser string, message string) {
 
 func getOnlineUsers() (onlineUsers string) {
 	onlineUsers = "Online Users: \n"
+	set := make(map[string]string)
 	for _, user := range allClient_conns {
+		set[user] = user
+	}
+	for _, user := range set {
 		onlineUsers = onlineUsers + user + "\n"
 	}
 	return
