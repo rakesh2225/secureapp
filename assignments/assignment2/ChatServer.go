@@ -99,45 +99,43 @@ func main() {
 	}
 	fmt.Println("EchoServer in GoLang developed by Rakesh, SecAD-S19")
 	fmt.Printf("EchoServer is listening on port '%s' ...\n", port)
-	for {
-		client_conn, _ := server.Accept()
-		go authenticateUser(client_conn)
-	}
-}
-
-func authenticateUser(client_conn net.Conn) {
-	fmt.Println("Authenticating User.")
+	
 	go func() {
 		for {
-			var buffer [BUFFERSIZE]byte
-			byte_received, read_err := client_conn.Read(buffer[0:])
-			if read_err != nil {
-				fmt.Println("Error in receiving...")
-				return
-			}
-			data := buffer[0:byte_received]
-			fmt.Printf("Received data: %s\n", buffer)
-			var account Account
-			if err := json.Unmarshal(data, &account); err != nil {
-				sendToClient([]byte("LOGIN_FAILED"), client_conn)
-				//panic(err)
-			} else {
-				if accountmanager.CheckAccount(account.Username, account.Password) {
-					sendToClient([]byte("LOGIN_SUCCESS"), client_conn)
-					allClient_conns[client_conn] = account.Username
-					newClientChannel <- client_conn
-					break
-				} else {
-					sendToClient([]byte("LOGIN_FAILED"), client_conn)
-					break
-				}
-			}
+			client_conn, _ := server.Accept()
+			go authenticateUser(client_conn)
 		}
 	}()
 	for {
 		select {
 			case client_conn := <-newClientChannel:
 				go handleUserMessages(client_conn)
+		}
+	}
+}
+
+func authenticateUser(client_conn net.Conn) {
+	fmt.Println("Authenticating User.")
+	var buffer [BUFFERSIZE]byte
+	byte_received, read_err := client_conn.Read(buffer[0:])
+	if read_err != nil {
+		fmt.Println("Error in receiving...")
+		return
+	}
+	data := buffer[0:byte_received]
+	fmt.Printf("Received data: %s\n", buffer)
+	var account Account
+	if err := json.Unmarshal(data, &account); err != nil {
+		sendToClient([]byte("LOGIN_FAILED"), client_conn)
+		//panic(err)
+	} else {
+		if accountmanager.CheckAccount(account.Username, account.Password) {
+			sendToClient([]byte("LOGIN_SUCCESS"), client_conn)
+			allClient_conns[client_conn] = account.Username
+			newClientChannel <- client_conn
+		} else {
+			sendToClient([]byte("LOGIN_FAILED"), client_conn)
+			authenticateUser(client_conn)
 		}
 	}
 }
@@ -168,7 +166,10 @@ func handleUserMessages(client_conn net.Conn) {
 							sendToUsernames(client_conn, allClient_conns[client_conn], messageFormat[1], messageFormat[2])
 						}
 					} else if strings.ToLower(messageFormat[0]) == "add" {
-						addNewUser(messageFormat[1], messageFormat[2])
+						err := addNewUser(messageFormat[1], messageFormat[2])
+						if err != nil {
+							sendToClient([]byte("User already exists: " + messageFormat[1]), client_conn)
+						}
 					} else {
 						sendToClient([]byte("INVALID_SYNTAX"), client_conn)
 					}
@@ -188,10 +189,8 @@ func handleUserMessages(client_conn net.Conn) {
 	}
 }
 
-func addNewUser(username string, password string) {
+func addNewUser(username string, password string) error {
 	fmt.Println("Adding new user")
 	err := accountmanager.AddUser(username, password)
-	if err != nil {
-		fmt.Println(err)
-	}
+	return err
 }

@@ -42,7 +42,6 @@ func loadUsers() {
 
 func usersExists(username string) bool {
 	loadUsers()
-	fmt.Println(len(users.Users))
 	for i := 0; i < len(users.Users); i++ {
 		if username == users.Users[i].Username {
 			return true
