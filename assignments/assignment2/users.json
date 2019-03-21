@@ -1,11 +1,28 @@
 {
-	"users": 
-		{
-			"rakeshsv1" : {
-				"password" : "test123"
-			},
-			"rakeshsv2" : {
-				"password" : "udayton"
-			}
-		}
+ "users": [
+  {
+   "username": "rakeshsv",
+   "password": "d9ba672fd9c331d7d7947b784a5e1a7e3ec2c6029049f9183affedcf8338a040"
+  },
+  {
+   "username": "praveen",
+   "password": "311f5a87f4bec681e19d862bab2a621493ab2b1417d3328ad13814d21019c0ad"
+  },
+  {
+   "username": "rakeshsv1",
+   "password": "9cff21ce7efc1d367d043dcd2924bc6c24e9ca86600a95ac6882bdddd036f912"
+  },
+  {
+   "username": "rakeshsv2",
+   "password": "125a251727a2eec721720860823f39f55afa33450bb129906888a7c047078ce4"
+  },
+  {
+   "username": "rakeshsv3",
+   "password": "15cb455fa0c6f5104cf40ca3e071ac32d8c860f5e075924653363abbcf418a10"
+  },
+  {
+   "username": "rak",
+   "password": "cce7460d9e7621743901ca9b8d3a325fe1277dd991e133a2ad0cbce8dd2b93dd"
+  }
+ ]
 }

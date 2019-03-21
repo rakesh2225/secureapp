@@ -158,7 +158,7 @@ func handleUserMessages(client_conn net.Conn) {
 				sendOnlineUsers(client_conn)
 			} else {
 				messageFormat := strings.Split(string(data), ":")
-				if len(messageFormat) < 2 {
+				if len(messageFormat) < 2 || len(messageFormat) > 3 {
 					sendToClient([]byte("INVALID_SYNTAX"), client_conn)
 				} else {
 					if strings.ToLower(messageFormat[0]) == "to" {
@@ -167,6 +167,8 @@ func handleUserMessages(client_conn net.Conn) {
 						} else {
 							sendToUsernames(client_conn, allClient_conns[client_conn], messageFormat[1], messageFormat[2])
 						}
+					} else if strings.ToLower(messageFormat[0]) == "add" {
+						addNewUser(messageFormat[1], messageFormat[2])
 					} else {
 						sendToClient([]byte("INVALID_SYNTAX"), client_conn)
 					}
@@ -183,5 +185,13 @@ func handleUserMessages(client_conn net.Conn) {
 				go sendToAllClients(client_conn, "Server", message)				
 				fmt.Printf("Total connected clients: %d\n", len(allClient_conns))
 		}
+	}
+}
+
+func addNewUser(username string, password string) {
+	fmt.Println("Adding new user")
+	err := accountmanager.AddUser(username, password)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
