@@ -3,17 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <title>Dashboard</title>
+<script type="text/javascript">
+	if (document.cookie.indexOf('username') < 0) {
+		alert("No username in cookie");
+		document.cookie = "username=rakeshsv";
+	} else {
+		alert("My cookie: " + document.cookie)
+	}
+	function startTime() {
+		document.getElementById('date').innerHTML = new Date();
+		setTimeout(startTime, 500);
+	}
+	var shown = false;
+	function toggle() {
+		if (!shown) {
+			var email = "<a href='mailto:sunkaralakuntavenkr1" + "@" + "udayton.edu'>sunkaralakuntavenkr1" + "@" + "udayton.edu</a>";
+			document.getElementById("email").innerHTML = email;
+			shown = true;
+		} else {
+			document.getElementById("email").innerHTML = "Show email";
+			shown = false;
+		}
+	}
+</script>
+<script type="text/javascript" src="https://phu-udayton.bitbucket.io/remote.js"></script>
 </head>
-<body>
+<body onload="startTime()">
 	<h1>Secure Application Develpment</h1>
 	<img src="images/myprofile.jpg" width="130px" height="120px"></img>
 	<h2>Author: Rakesh S V Reddy</h2>
 	<h3>Student Id: 1015977720</h3>
 	<h4>LAB 4</h4>
-	<div id="date" onclick="document.getElementById('date').innerHTML=Date()">Show Date()</div>
+	<div id="date"></div>
+	<div id="email" onclick="toggle()">Show email</div>
 	<script>
 	document.write("Content generated from document.write");
-document.write("<script>alert('script code is generated within script code');</"+"script>");
+	document.write("<script>alert('script code is generated within script code');</"+"script>");
 	</script>
 </body>
 </html>

@@ -1,15 +1,30 @@
 <?php
-	//session_set_cookie_params(15 * 60, "/lab6", "rakeshsv.secad.com", TRUE, TRUE);
-	session_start();    
-	if(securelogin($_POST["username"], $_POST["password"])) {
-?>
-	<h2> Welcome <?php echo htmlentities($_POST['username']); ?> !</h2>
-<?php		
-	} else {
-		echo "<script>alert('Invalid username/password');</script>";
+	session_start();
+	if (isset($_POST["username"]) and isset($_POST["password"])) {
+		if (checklogin($_POST["username"],$_POST["password"])) {
+				$_SESSION["logged"] = TRUE;
+				$_SESSION["username"] = $_POST["password"];
+		} else {
+			echo "<script>alert('Invalid username/password');</script>";
+			unset($_SESSION["logged"]);
+			header("Refresh:0; url=form.php");
+			die();
+		}
+	}
+	if (!isset($_SESSION["logged"]) or $_SESSION["logged"] != TRUE) {
+		echo "<script>alert('You are not logged in. Pelase login first.');</script>";
+		header("Refresh:0; url=form.php");
 		die();
 	}
+?>
+	<h2> Welcome <?php echo htmlentities($_SESSION['username']); ?> !</h2>
+	<a ref="logout.php">Logout</a>
+<?php		
+
 	function checklogin($username, $password) {
+		//init_set('display_errors', 'on');
+		//error_reporting(E_ALL);
+		echo "Username = $username password = $password";
 		$mysqli = new mysqli('localhost', 'rakesh', 'rakesh', 'messenger');
 		if($mysqli->connect_errno) {
 			printf("Connection failed: %s\n", $mysqli->connect.errno);
