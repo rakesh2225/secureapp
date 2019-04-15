@@ -1,9 +1,11 @@
 <?php
+	session_set_cookie_params(15*30, "/lab6", "rakeshsv.secad.com", TRUE, TRUE);
 	session_start();
 	if (isset($_POST["username"]) and isset($_POST["password"])) {
-		if (checklogin($_POST["username"],$_POST["password"])) {
+		if (securelogin($_POST["username"],$_POST["password"])) {
 				$_SESSION["logged"] = TRUE;
 				$_SESSION["username"] = $_POST["password"];
+				$_SESSION["browser"] = $_SERVER["HTTP_USER_AGENT"];
 		} else {
 			echo "<script>alert('Invalid username/password');</script>";
 			unset($_SESSION["logged"]);
@@ -16,9 +18,14 @@
 		header("Refresh:0; url=form.php");
 		die();
 	}
+	if ($_SESSION["browser"] != $_SERVER["HTTP_USER_AGENT"]) {
+		echo "<script>alert('Session hijacking is detected.');</script>";
+		header("Refresh:0; url=form.php");
+		die();
+	}
 ?>
 	<h2> Welcome <?php echo htmlentities($_SESSION['username']); ?> !</h2>
-	<a ref="logout.php">Logout</a>
+	<a href="changepwdform.php">Change password</a> | <a href="logout.php">Logout</a>
 <?php		
 
 	function checklogin($username, $password) {
