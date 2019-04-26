@@ -16,4 +16,17 @@
   		}
 		return TRUE;
 	}
+  function addnewuser($username, $password) {
+      global $mysqli;
+      $prepared_stmt = "INSERT INTO users VALUES (?, password(?));";
+      echo "DEBUG: Adduser -> prepared_stmt: $prepared_stmt";
+      if (!$stmt = $mysqli->prepare($prepared_stmt)) {
+        return FALSE;
+      }
+      $stmt->bind_param('ss', $username, $password);
+      if(!$stmt->execute()) {
+        return FALSE;
+      }
+    return TRUE;
+  }
 ?>

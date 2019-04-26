@@ -12,7 +12,7 @@ if(process.argv.length != 4){
 var host=process.argv[2];
 var port=process.argv[3];
 
-if(host.length >253 || port.length >5 ){
+if(host.length >253 || port.length >5 ) {
 	console.log("Invalid host or port. Try again!\nUsage: node %s <port>", process.argv[1]);
 	process.exit(1);	
 }

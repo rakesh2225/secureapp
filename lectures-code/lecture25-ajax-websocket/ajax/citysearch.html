@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<script>
+function startTime() {
+	document.getElementById('clock').innerHTML = new Date();
+	setTimeout(startTime, 500);
+}
+function clearHints() {
+	document.getElementById("hints").innerHTML = "";
+    document.getElementById("hints").style.border = "0px";
+}
+function showHints(hints) {
+    document.getElementById("hints").innerHTML= hints;      	
+	document.getElementById("hints").style.border = "1px solid #A5ACB2";
+}
+function getHints(str) {
+	console.log("Input="+str);
+	if (str.length == 0) {
+        clearHints();
+        return;
+    }
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+	  	if (this.readyState == 4 && 
+			this.status == 200){
+			console.log("Received data= " + xhttp.responseText);
+  			showHints(xhttp.responseText)
+  		}
+	}
+	xhttp.open("GET", "/restfulAPI/uscitysearch.php?city=" + str, true);
+	xhttp.send();
+}
+</script>
+
+<body onload="startTime()">
+<h4>City Search Hints, Lab 7 - SecAD-S19, by Phu Phung</h4>
+Current time: <div id="clock"></div>
+
+<input type = "text" size = "30" onkeyup="getHints(this.value)"/>
+<div id = "hints"></div>
+
+
+</body>
+</html>

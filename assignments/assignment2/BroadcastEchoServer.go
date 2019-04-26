@@ -7,24 +7,14 @@ import (
 	"os"
 	"strings"
 	"encoding/json"
+   "bitbucket.org/secad-s19/golang/jsondb/users"
 )
 
 const BUFFERSIZE int = 1024
 
 var allClient_conns = make(map[net.Conn]string)
 
-var credsDB map[string]interface{}
-
 var database = []byte(`{ "users" : {"rakeshsv1": {"password" : "test123"}, "rakeshsv2" : {"password" : "udayton"}}}`)
-
-func init() {
-	fmt.Println("Initializing...")
-	if err := json.Unmarshal(database, &credsDB); err != nil {
-		fmt.Println("Error in database parsing.");
-		panic(err)
-		os.Exit(1)
-	}
-}
 
 func sendToClient(data []byte, client_conn net.Conn) {
 	_, write_err := client_conn.Write(data)
@@ -87,9 +77,9 @@ func sendOnlineUsers(toClient net.Conn) {
 }
 
 func authenticateUser(creds map[string]interface{}, client_conn net.Conn) {
-	users := credsDB["users"].(map[string]interface{})
 	username := creds["username"].(string)
-	if users[username] != nil && (users[username].(map[string]interface{}))["password"].(string) == creds["password"].(string) {
+	password := creds["password"].(string)
+	if users.CheckAccount(username, password) {
 		allClient_conns[client_conn] = username
 		sendToClient([]byte("User authenticated. You can now message your friends."), client_conn)
 	} else {
@@ -175,7 +165,7 @@ func main() {
 		fmt.Println("Invalid port value. Try again!")
 		os.Exit(1)
 	}
-	server, err := net.Listen("tcp", ":"+port)
+	server, err := net.Listen("tcp", ":" + port)
 	if err != nil {
 		fmt.Printf("Cannot listen on port '" + port + "'!\n")
 		os.Exit(2)
@@ -185,7 +175,9 @@ func main() {
 	newClientChannel := make(chan net.Conn)
 	go func() {
 		for {
+			fmt.Println("Accepting")
 			client_conn, _ := server.Accept()
+			fmt.Println("New Client")
 			newClientChannel <- client_conn
 		}
 	}()

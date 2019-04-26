@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Secure Application Development - Spring 2019 - Ajax Demo</title>
+</head>
+<script>
+function startTime() {
+    document.getElementById('clock').innerHTML = new Date();
+    setTimeout(startTime, 500);
+}
+function getFile(file){
+  //alert(file);
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    //testing only
+    //alert("readyState="+this.readyState+", status="+this.status+", statusText="+this.statusText);
+	  if (this.readyState == 4 && 
+			this.status == 200){
+  			document.getElementById('filecontent').textContent=xhttp.responseText;
+  			//alert(xhttp.responseText);
+  	}
+	}
+  xhttp.open("GET", file, true);
+  xhttp.send();
+} 
+</script>
+<body onload="startTime()">
+Current time: <div id="clock"></div>
+File to get: <input type="text" id="filename" value="ajax-test.html"> <button onclick="getFile(document.getElementById('filename').value)">Get</button><br>
+File content from server: <br>
+<div id="filecontent"></div>
+</body>
+</html>
