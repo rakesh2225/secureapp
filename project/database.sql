@@ -13,7 +13,8 @@ CREATE TABLE `posts` (
   username varchar(50) NOT NULL,
   post varchar(300) NOT NULL,
   posted_date varchar(100) NOT NULL,
-  PRIMARY KEY (`postid`)
+  PRIMARY KEY (`postid`),
+  FOREIGN KEY (`username`) REFERENCES users(`username`)
 );
 
 INSERT INTO `users` VALUES ('admin', password('admin'), 1, 1);
