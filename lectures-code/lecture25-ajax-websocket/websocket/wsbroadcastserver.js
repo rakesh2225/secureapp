@@ -6,6 +6,8 @@ wsserver.on('connection', function connection(wsclient, request) {
   	console.log("A new connection from: "+ clientID);
 	wsclient.on('message', function incoming(data) {
 		console.log("Received from " + clientID + ", data=" + data);
-    		// Broadcast to everyone
+    		wsserver.clients.forEach(function each(client) {
+    			client.send(clientID + " says " + data);
+    		});
   	});
 });
