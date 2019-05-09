@@ -9,7 +9,6 @@
       <h1>Change password</h1>
       <h2> <?php echo $_SESSION["username"]; ?>! </h2>
 <?php
-  //some code here
   echo "Current time: " . date("Y-m-d h:i:sa")
 ?>
 <form action="changepwd.php" method="POST" class="form login">

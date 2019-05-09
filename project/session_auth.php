@@ -9,4 +9,5 @@
 		header("Refresh:0; url=form.php");
 		die();
 	}
+
 ?>
